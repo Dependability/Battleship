@@ -108,18 +108,14 @@ const GameBoard = () => {
     }
 
     function createRandomBoard() {
-        let count = 0;
         [5,3,3,4,2].forEach((val)=> {
             let placedShip = this.placeShip([Math.floor(Math.random() * 10), Math.floor(Math.random()* 10)], ['x','y'][Math.floor(Math.random() * 2)], val);
         
             while (!(placedShip)) {
-                count++;
                 placedShip = this.placeShip([Math.floor(Math.random() * 10), Math.floor(Math.random()* 10)], ['x','y'][Math.floor(Math.random() * 2)], val);  
             }
-            console.log(this.board)
 
         })
-        console.log(count)
     }
 
 

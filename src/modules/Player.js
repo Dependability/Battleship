@@ -22,11 +22,6 @@ const Player = (name, playerNum) => {
 
     function doSmartShot(enemy, lastHit, triedDirections, direction, length, endsReached) {
         //direction will be [ne, sw]
-        console.log('Last hit: ', lastHit);
-        console.log('Tried Directions: ', triedDirections)
-        console.log('Direction: ', direction)
-        console.log('Ends Reached', endsReached)
-        console.log('Length', length)
         if (endsReached >= 2 || length >= 5 ) return 'done';
         let enemyBoard = enemy.playerBoard;
         let shot = false;
@@ -45,12 +40,10 @@ const Player = (name, playerNum) => {
                     return {hit: [lastHit[0] + (direction[0] * -(length - 1)), lastHit[1]], direction :[direction[0] * -1, 0], endsReached: +endsReached + 1}
                 }
                 if (!shot) {
-                    console.log('yup..')
                     if (+endsReached == 1) {
                         return 'redo';
                     }
                     if (length < 5) {
-                        console.log(lastHit)
                         sentAttack = enemyBoard.receiveAttack([lastHit[0] - (direction[0] * (length)), lastHit[1]]);
                         if (sentAttack) {
                             shot = true;
@@ -58,10 +51,8 @@ const Player = (name, playerNum) => {
                                 return {shotHit: true, hit: [lastHit[0] - (direction[0] * (length )), lastHit[1]], direction: [direction[0] * -1, 0], endsReached: +endsReached + 1}
                             }
                             
-                            console.log('survived.')
                         }
                         if (!shot) {
-                            console.log('issues')
                             return 'redo'
                         }
 
@@ -71,8 +62,6 @@ const Player = (name, playerNum) => {
                 } 
 
             } else {
-                console.log('here')
-                console.log(lastHit)
                 let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1]  + direction[1]]);
                 if (sentAttack) {
                     shot = true;
@@ -85,7 +74,6 @@ const Player = (name, playerNum) => {
                     return {hit: [lastHit[0], lastHit[1] + (direction[1] * -(length - 1))], direction :[0,direction[1] * -1], endsReached: +endsReached + 1}
                 }
                 if (!shot) {
-                    console.log('yup..')
                     if (+endsReached == 1) {
                         return 'redo';
                     }
@@ -99,7 +87,6 @@ const Player = (name, playerNum) => {
 
                         }
                         if (!shot) {
-                            console.log('issues..')
                             return 'redo'
                         }
 
@@ -117,17 +104,27 @@ const Player = (name, playerNum) => {
             let sentAttack = enemyBoard.receiveAttack([lastHit[0] + 1, lastHit[1]]);
             let triedDirection = [...triedDirections]
             triedDirection[0] = 1;
-                console.log('we in?')
             if (sentAttack) {
                 shot = true;
                 if (sentAttack == 'hit') {
                     
                     return {shotHit: true, hit: [lastHit[0] + 1, lastHit[1]], direction: [1,0], endsReached: triedDirections[2] == 1 ? endsReached + 1 : endsReached}
                 }
-                console.log('returned')
+
                 return {hit: lastHit, triedDirection, endsReached}
             }
-            console.log(triedDirection);
+            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
+        } else if (triedDirections[1] == 0) {
+            let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1] + 1]);
+            let triedDirection = [...triedDirections]
+                triedDirection[1] = 1;
+            if (sentAttack) {
+                shot = true;
+                if (sentAttack == 'hit') {
+                    return {shotHit: true, hit: [lastHit[0], lastHit[1] + 1], direction: [0,1], endsReached: triedDirections[3] == 1 ? endsReached + 1 : endsReached}
+                }
+                return {hit: lastHit, triedDirection, endsReached}
+            }
             return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
         } else if (triedDirections[2] == 0) {
             let sentAttack = enemyBoard.receiveAttack([lastHit[0] - 1, lastHit[1]]);
@@ -141,21 +138,6 @@ const Player = (name, playerNum) => {
                 
                 return {hit: lastHit, triedDirection, endsReached}
             }
-            console.log(triedDirection);
-            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
-        }
-        else if (triedDirections[1] == 0) {
-            let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1] + 1]);
-            let triedDirection = [...triedDirections]
-                triedDirection[1] = 1;
-            if (sentAttack) {
-                shot = true;
-                if (sentAttack == 'hit') {
-                    return {shotHit: true, hit: [lastHit[0], lastHit[1] + 1], direction: [0,1], endsReached: triedDirections[3] == 1 ? endsReached + 1 : endsReached}
-                }
-                return {hit: lastHit, triedDirection, endsReached}
-            }
-            console.log(triedDirection);
             return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
         }
         else if (triedDirections[3] == 0) {
@@ -170,7 +152,6 @@ const Player = (name, playerNum) => {
                 
                 return {hit: lastHit, triedDirection, endsReached}
             }
-            console.log(triedDirection);
             return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
 
         }

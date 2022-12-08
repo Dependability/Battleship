@@ -152,7 +152,9 @@ selectDoneBtn.addEventListener('click', ()=> {
 let shotLength = 0;
 let result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] }
 let firstResult;
-let enemyBoard = document.querySelectorAll(".board-2 .cell")
+let enemyBoard = document.querySelectorAll(".board-2 .cell");
+let playerCount = document.querySelector('.count-hit2');
+let enemyCount = document.querySelector('.count-hit');
 enemyBoard.forEach((elem) => {
     elem.addEventListener('click', (e)=> {
         if (playerTurn != 0 ) {
@@ -172,20 +174,18 @@ enemyBoard.forEach((elem) => {
             }
 
             if (MODE == 'BOT') {
+                
                 if (shotLength > 0 && shotLength < 5) {
                     if (result == 'done') {
                         shotLength = 0;
                         result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] };
 
                     } else {
-                        console.log(shotLength)
-                        console.log('Shot Length above me.')
                         result = player2.doSmartShot(player1, result.hit, result.triedDirection, result.direction, shotLength, result.endsReached);
-                        console.log('result: ', result)
                         if (result == 'redo') {
                             shotLength = 0;
                             result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] };
-                            firstResult = player2.doRandomShot(player1);
+                            // firstResult = player2.doRandomShot(player1);
                         }
                     }
                     
@@ -193,18 +193,15 @@ enemyBoard.forEach((elem) => {
                     
                 } 
 
-                else if (shotLength == 0 || shotLength >= 5 ) {
+                if (shotLength == 0 || shotLength >= 5 ) {
                     shotLength = 0;
                     firstResult = player2.doRandomShot(player1);
                 }
                 
                 if (result.shotHit || firstResult.shotHit) {
                     shotLength += 1;
-                    console.log('we got a hit!')
                     if (firstResult.shotHit) {
                         result.hit = [...firstResult.shot];
-                        console.log(result.hit)
-                        console.log(shotLength)
                     }
                     firstResult.shotHit = false;
 
@@ -212,7 +209,8 @@ enemyBoard.forEach((elem) => {
                 playerTurn = 0;
                 drawBoard(player1);
                 if (player1.playerBoard.reportAllSunk()) {
-                    console.log("YOU LOSE!")
+                    console.log("YOU LOSE!");
+                    drawBoard(player2)
                     playerTurn = 100;
                     return
                 }
