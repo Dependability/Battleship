@@ -1,162 +1,255 @@
 import GameBoard from "./GameBoard";
-
 const Player = (name, playerNum) => {
     
     let playerBoard = GameBoard();
-    function doRandomShot(enemy) {
-        let shot = false;
-        while (!shot) {
-            let randomShotX = Math.floor(Math.random() * 10);
-            let randomShotY = Math.floor(Math.random() * 10);
-            let enemyBoard = enemy.playerBoard;
-            const randomShot = enemyBoard.receiveAttack([randomShotX, randomShotY]);
-            if (randomShot) {
-                shot = true;
-                if (randomShot == 'hit') {
-                    return {shotHit: true, shot: [randomShotX, randomShotY]}
-                }
-                return {shotHit: false, shot: null};
-            }
-        }
+    let shotBoard = GameBoard();
+    let botHitReport = {
+        lastHit: false,
+        triedDirections: 0, //NESW
+        oneStreak: 0,
+        totalStreak: 0,
+        direction: false,
+        ends: 0
+
+    }
+    let opponentShipsAvailable = [5,4,3,3,2]
+
+    function resetBotReport() {
+        botHitReport.lastHit = false;
+        botHitReport.triedDirections = 0; 
+        botHitReport.oneStreak = 0;
+        botHitReport.totalStreak = 0;
+        botHitReport.direction = false;
+        botHitReport.ends = 0;
+
     }
 
-    function doSmartShot(enemy, lastHit, triedDirections, direction, length, endsReached) {
-        //direction will be [ne, sw]
-        if (endsReached >= 2 || length >= 5 ) return 'done';
-        let enemyBoard = enemy.playerBoard;
-        let shot = false;
-        if (direction != null && !(direction[0] === 0 && direction[1] === 0)) {
-            if (direction[0] != 0) {
-                let sentAttack = enemyBoard.receiveAttack([lastHit[0] + direction[0], lastHit[1]]);
-                if (sentAttack) {
-                    shot = true;
-                    if (sentAttack == 'hit') {
-                        return {shotHit: true, hit: [lastHit[0] + direction[0], lastHit[1]], direction, endsReached}
+    function validHitCoords(board) {
+        const returnArr = [];
+        for (let i = 0; i < 10; i++) {
+            for (let j = 0; j < 10; j++) {
+                if (board[i][j].hit) {
+                    continue;
+                }
+                //Check if the square has a ship around it.
+
+                if (board[i][j + 1] && board[i][j+1].ship) {
+                    continue;
+                }
+                if (board[i][j - 1] && board[i][j-1].ship) {
+                    continue
+                }
+                if (board[i - 1]) {
+                    if (board[i -1][j] && board[i-1][j].ship) {
+                        continue
                     }
-                    if (endsReached == 1) {
+                    if (board[i-1][j-1] && board[i-1][j-1].ship) {
+                        continue
+                    }
+                    if (board[i-1][j+1] && board[i-1][j+1].ship) {
+                        continue
+                    }
+                }
+                if (board[i + 1]) {
+                    if (board[i +1][j] && board[i+1][j].ship) {
+                        continue
+                    }
+                    if (board[i+1][j-1] && board[i+1][j-1].ship) {
+                        continue
+                    }
+                    if (board[i+1][j+1] && board[i+1][j+1].ship) {
+                        continue
+                    }
+                }
+                let minimum = Math.min(...opponentShipsAvailable)
+                let breakEach = false;
+                let firstx;
+                let firsty;
+                let secondx;
+                let secondy;
+                for (let add = 1; add <= 10 ; add++ ) {
+                    if (!firsty) {
+                        if (board[i + add]) {
+                            if (board[i + add][j] && board[i + add][j].hit) {
+                                firsty = i + add;
+                            }
+                        } else {
+                            firsty = 10;
+                        }
+                    }
+                    if (!secondy) {
+                        if (board[i - add]) {
+                            if (board[i - add][j] && board[i - add][j].hit) {
+                                secondy = i - add;
+                            }
+                        } else {
+                            secondy = 0;
+                        }
+                    }
+                    if (!firstx) {
+                     if (board[i][j + add]) {
+                        if (board[i][j + add] && board[i][j + add].hit) {
+                            firstx = j + add
+                        }
+                     } else {
+                        firstx = 10;
+                     }
+                    }
+                    if (!secondx) {
+                     if (board[i][j - add]) {
+                        if (board[i][j - add] && board[i][j - add].hit) {
+                            secondx = j - add;
+                        }
+                     } else {
+                        secondx = 0;
+                     }
+                    }
+                }
+                
+            
+                if (((firstx - secondx - 1) < minimum) && ((firsty - secondy - 1) < minimum)) {
+
+                    continue
+                }
+
+                returnArr.push([i, j]);
+            }
+        }
+        return returnArr;
+    }
+    function doRandomShot(board) {
+        let maximumLength = Math.max(...opponentShipsAvailable)
+        console.log(botHitReport)
+        console.log(opponentShipsAvailable)
+        if (botHitReport.lastHit) {
+            
+            if (botHitReport.totalStreak < maximumLength) {
+                if (botHitReport.direction) {
+                    let boardRow = botHitReport.lastHit[0] + (botHitReport.direction[0] * botHitReport.oneStreak);
+                    let boardColumn = botHitReport.lastHit[1] + (botHitReport.direction[1] * botHitReport.oneStreak);
+                    if (shotBoard.board[boardRow] && shotBoard.board[boardRow][boardColumn] && !shotBoard.board[boardRow][boardColumn].hit) {
+                        const boardAttack = board.receiveAttack([boardRow, boardColumn]);
+                        if (boardAttack) {
+                            if (boardAttack  == 'hit') {
+                                shotBoard.board[boardRow][boardColumn]['ship'] = true;
+                                shotBoard.board[boardRow][boardColumn]['hit'] = true;
+                                botHitReport.totalStreak += 1;
+                                botHitReport.oneStreak += 1;
+                                return
+                            } else {
+                                shotBoard.board[boardRow][boardColumn]['hit'] = true;
+                                botHitReport.ends += 1;
+                                if (botHitReport.ends == 2) {
+                                    opponentShipsAvailable.splice(opponentShipsAvailable.indexOf(botHitReport.totalStreak),1);
+                                    resetBotReport();
+
+                                } else {
+                                    botHitReport.direction = [botHitReport.direction[0] * -1, botHitReport.direction[1] * -1];
+                                    botHitReport.oneStreak = 1;
+                                }
+                                return;
+                            }
+                        }  
                         
-                        return 'done';
-                    }
-                    return {hit: [lastHit[0] + (direction[0] * -(length - 1)), lastHit[1]], direction :[direction[0] * -1, 0], endsReached: +endsReached + 1}
-                }
-                if (!shot) {
-                    if (+endsReached == 1) {
-                        return 'redo';
-                    }
-                    if (length < 5) {
-                        sentAttack = enemyBoard.receiveAttack([lastHit[0] - (direction[0] * (length)), lastHit[1]]);
-                        if (sentAttack) {
-                            shot = true;
-                            if (sentAttack == 'hit') {
-                                return {shotHit: true, hit: [lastHit[0] - (direction[0] * (length )), lastHit[1]], direction: [direction[0] * -1, 0], endsReached: +endsReached + 1}
+                        return
+                    }  else {
+                        if (!shotBoard.board[boardRow] || !shotBoard.board[boardRow][boardColumn] || shotBoard.board[boardRow][boardColumn].hit) {
+                            botHitReport.ends += 1;
+                            if (botHitReport.ends == 2) {
+                                opponentShipsAvailable.splice(opponentShipsAvailable.indexOf(botHitReport.totalStreak),1);
+                                resetBotReport();
+                                
                             }
-                            
+                            botHitReport.direction = [botHitReport.direction[0] * -1, botHitReport.direction[1] * -1];
+                            botHitReport.oneStreak = 1;
+                            doRandomShot(board);
+                            return
                         }
-                        if (!shot) {
-                            return 'redo'
-                        }
-
-                    }else {
-                        return 'done';
                     }
-                } 
+                } else {
+                    let directionTry;
+                    switch (botHitReport.triedDirections) {
+                        case 0:
+                            directionTry = [1,0];
+                            break;
+                        case 1:
+                            directionTry = [0,1];
+                            break;
+                        case 2:
+                            directionTry = [-1, 0];
+                            break;
+                        case 3:
+                            directionTry = [0, -1];
+                            break;
+                        default:
+                            break;
+                    }
+                    let boardRow = botHitReport.lastHit[0] + directionTry[0];
+                    let boardColumn = botHitReport.lastHit[1] + directionTry[1];
+                    if (shotBoard.board[boardRow] && shotBoard.board[boardRow][boardColumn] && !shotBoard.board[boardRow][boardColumn].hit) {
+                        const boardAttack = board.receiveAttack([boardRow, boardColumn]);
+                        if (boardAttack) {
+                            if (boardAttack == 'hit') {
+                                shotBoard.board[boardRow][boardColumn]['ship'] = true;
+                                shotBoard.board[boardRow][boardColumn]['hit'] = true;
+                                botHitReport.direction = [...directionTry];
+                                botHitReport.oneStreak = 2;
+                                botHitReport.totalStreak = 2;
+                                return
+                            } else {
+                                
+                                shotBoard.board[boardRow][boardColumn]['hit'] = true;
+                                botHitReport.triedDirections += 1;
+                                return
+                            }
+                        } else {
+                            console.log('Invalid hit.')
+                        }
 
+                    } else if (!shotBoard.board[boardRow] || !shotBoard.board[boardRow][boardColumn] || shotBoard.board[boardRow][boardColumn].hit) {
+                        
+                        botHitReport.triedDirections += 1;
+                        console.log('yup cant go that way, go again!')
+                        doRandomShot(board);
+                        
+                        return;
+                    }
+
+
+                }
             } else {
-                let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1]  + direction[1]]);
-                if (sentAttack) {
-                    shot = true;
-                    if (sentAttack =='hit') {
-                        return {shotHit: true, hit: [lastHit[0], lastHit[1]  + direction[1]], direction, endsReached: endsReached}
-                    }
-                    if (endsReached == 1) {
-                        return 'done';
-                    }
-                    return {hit: [lastHit[0], lastHit[1] + (direction[1] * -(length - 1))], direction :[0,direction[1] * -1], endsReached: +endsReached + 1}
-                }
-                if (!shot) {
-                    if (+endsReached == 1) {
-                        return 'redo';
-                    }
-                    if (length < 5) {
-                        sentAttack = enemyBoard.receiveAttack([lastHit[0] , lastHit[1] - (direction[1] * (length))]);
-                        if (sentAttack) {
-                            shot = true;
-                            if (sentAttack == 'hit') {
-                                return {shotHit: true,hit: [lastHit[0] , lastHit[1]- (direction[1] * (length))], direction: [0,direction[1] * -1], endsReached: +endsReached + 1}
-                            }
-
-                        }
-                        if (!shot) {
-                            return 'redo'
-                        }
-
-                    } else {
-                        return 'done';
-                    }
-                }
+                opponentShipsAvailable.splice(opponentShipsAvailable.indexOf(botHitReport.totalStreak),1);
             }
-            
-            
         }
-
-        if (triedDirections[0] == 0) {
-
-            let sentAttack = enemyBoard.receiveAttack([lastHit[0] + 1, lastHit[1]]);
-            let triedDirection = [...triedDirections]
-            triedDirection[0] = 1;
-            if (sentAttack) {
-                shot = true;
-                if (sentAttack == 'hit') {
-                    
-                    return {shotHit: true, hit: [lastHit[0] + 1, lastHit[1]], direction: [1,0], endsReached: triedDirections[2] == 1 ? endsReached + 1 : endsReached}
-                }
-
-                return {hit: lastHit, triedDirection, endsReached}
-            }
-            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
-        } else if (triedDirections[1] == 0) {
-            let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1] + 1]);
-            let triedDirection = [...triedDirections]
-                triedDirection[1] = 1;
-            if (sentAttack) {
-                shot = true;
-                if (sentAttack == 'hit') {
-                    return {shotHit: true, hit: [lastHit[0], lastHit[1] + 1], direction: [0,1], endsReached: triedDirections[3] == 1 ? endsReached + 1 : endsReached}
-                }
-                return {hit: lastHit, triedDirection, endsReached}
-            }
-            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
-        } else if (triedDirections[2] == 0) {
-            let sentAttack = enemyBoard.receiveAttack([lastHit[0] - 1, lastHit[1]]);
-            let triedDirection = [...triedDirections]
-            triedDirection[2] = 1;
-            if (sentAttack) {
-                shot = true;
-                if (sentAttack == 'hit') {
-                    return {shotHit: true, hit: [lastHit[0] - 1, lastHit[1]], direction: [-1,0], endsReached: triedDirections[0] == 1 ? endsReached + 1 : endsReached}
-                }
+        const availableHits = validHitCoords(shotBoard.board);
+        
+        const randomNum = Math.floor(Math.random() * (availableHits.length))
+        const coords = availableHits[randomNum];
+        console.log('Shot random at :', coords)
+        const resultShot = board.receiveAttack(coords)
+        switch (resultShot) {
+            case 'hit':
+                console.log('Hit')
+                shotBoard.board[coords[0]][coords[1]]['ship'] = true;
+                shotBoard.board[coords[0]][coords[1]]['hit'] = true;
+                resetBotReport();
+                botHitReport.lastHit = [...coords];
+                botHitReport.totalStreak += 1;
+                botHitReport.oneStreak += 1;
+                break;  
+            case 'shot':
+                shotBoard.board[coords[0]][coords[1]]['hit'] = true;
+                resetBotReport();   
+                break;
+            default: 
+                console.log('uhhhh')
                 
-                return {hit: lastHit, triedDirection, endsReached}
-            }
-            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
         }
-        else if (triedDirections[3] == 0) {
-            let sentAttack = enemyBoard.receiveAttack([lastHit[0], lastHit[1] - 1]);
-            let triedDirection = [...triedDirections]
-            triedDirection[3] = 1;
-            if (sentAttack) {
-                shot = true;
-                if (sentAttack == 'hit') {
-                    return {shotHit: true, hit: [lastHit[0], lastHit[1] -1], direction: [0,-1], endsReached: triedDirections[1] == 1 ? endsReached + 1 : endsReached}
-                }
-                
-                return {hit: lastHit, triedDirection, endsReached}
-            }
-            return this.doSmartShot(enemy, lastHit, triedDirection, null, length, endsReached)
-
-        }
-        return 'done';
-
+        return resultShot;
+        
+    }
+    function doSmartShot(board) {
+        doRandomShot(board)
     }
 
     function playerTurn(coords,enemyBoard) {

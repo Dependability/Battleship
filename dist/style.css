@@ -1,7 +1,107 @@
+html, input, button {
+    font-family: 'Kanit', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1C3738;
+    color: white;
+}
+
+h1 {
+    font-size: 48px;
+    text-align: center;
+}
+.game-start-screen, .mode-select-screen {
+    position: absolute;
+    top: 0;
+    background-color: #1C3738;
+    color: white;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+
+.game-start-screen .title, .mode-select-screen .title{
+    margin: 75px 0 0;
+    font-size: 80px;
+    font-weight: 600;    
+}
+
+.mode-select-screen .options {
+    margin-top: 100px;
+    display: flex;
+    gap: 50px;
+    font-size: 24px;
+}
+
+.options div {
+    background-color: #A3B18A;
+    padding: 15px;
+    color: #1C3738;
+    user-select: none;
+    opacity: .5;
+    cursor: pointer;
+
+}
+
+.options div.BOT:hover{
+    box-shadow: 0px 1px 10px white;
+    
+}
+.game-start-button {
+    
+    margin-top: 200px;
+    font-size: 32px;
+    border-radius: 9999px;
+    padding: 10px;
+    width: 200px;
+    color: #FFFFFF;
+    text-align: center;
+    background-color: #069E2D;
+    cursor: pointer;
+
+}
+
+.select-done-button {
+    border-radius: 9999px;
+    padding: 10px;
+    font-size: 24px;
+    font-weight: 600;
+    width: 150px;
+    color: #FFFFFF;
+    text-align: center;
+    background-color: #069E2D;
+    cursor: pointer;
+    animation: ready 1s linear infinite;
+    margin: 20px auto 0;
+}
+
+@keyframes ready {
+
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1)
+    }
+
+}
+
 .cell {
     border: 1px black solid;
     border-right: none;
     border-bottom: none;
+    transition: all 200ms;
 }
 
 .valid {
@@ -12,7 +112,7 @@
     background-color: #ff4040;
 }
 .ship {
-    background-color: rgb(7, 44, 42);
+    background-color: black;
 }
 
 .ship.hit {
@@ -25,13 +125,7 @@
 
 
 
-.game-start-button {
-    font-size: 100px;
-    background-color: aqua;
-    width:fit-content;
-    cursor: pointer;
 
-}
 
 
 .board-container {
@@ -41,8 +135,9 @@
 }
 
 .board {
-    height: 47vh;
-    width: 47vh;  
+    background-color: white;
+    height: 60vh;
+    width: 60vh;  
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
@@ -51,10 +146,38 @@
 
 }
 
-.select-position {
+.select-position .top{
     display: flex;
     gap: 20px;
+    justify-content: center;
 
+}
+
+.rotate-ship {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #72705B;
+    padding: 10px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    color: black;
+    fill: black;
+    text-align: center;
+    font-size: 10px;;
+}
+
+
+.rotate-ship svg {
+    transition: all 400ms;
+    width: 30px;
+    height: 30px;
+    fill: inherit;
+}
+
+.rotate-ship svg.hovered {
+    transform: rotate(360deg);
 }
 
 .select-ships {
@@ -74,8 +197,8 @@
     display: grid;
     justify-items: stretch;
     align-items: stretch;
-    grid-auto-rows: calc(47vh/10);
-    grid-auto-columns: calc(47vh/10);
+    grid-auto-rows: calc(70vh/10);
+    grid-auto-columns: calc(70vh/10);
     grid-auto-flow: column;
     width: fit-content;
     background-color: green;

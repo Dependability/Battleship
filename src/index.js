@@ -4,26 +4,17 @@ import Player from './modules/Player.js'
 
 
 const shipSize = {carrier: 5, battleship: 4, submarine: 3, 'patrol-boat': 2, destroyer: 3, none: 0};
-const MODE = "BOT";
+let MODE = 'BOT';
 
 let board1 = document.querySelector('.board-1');
 let board2 = document.querySelector('.board-2');
 
-createBoard(board1);
-createBoard(board2);
 
 let gameEvent = 'start';
 let player1;
 let player2;
 let playerTurn = 0;
 
-switch (MODE) {
-    case 'PVP':
-        break;
-    default:
-        player1 = Player("Chad", 1);
-        player2 = Player("BOT", 2);
-}
 
 // player1.playerBoard.placeShip([2, 2], 'y', 3);
 // player1.playerBoard.placeShip([0,4], 'x', 3);
@@ -43,21 +34,149 @@ switch (MODE) {
     4. Play game.
     5. Restart Button
 */
+let gameStartScrn = document.querySelector('.game-start-screen');
 let gameStartBtn = document.querySelector('.game-start-button');
 let selectMenu = document.querySelector('.select-position');
 let selectShipsLi = document.querySelectorAll('.select-ship');
 const selectBoard = selectMenu.querySelector('.select-board');
 const rotateButton = document.querySelector('.rotate-ship');
-const mainGameContainer = document.querySelector('.board-container')
-let selectBoardCells = [];
+const mainGameContainer = document.querySelector('.board-container');
+const formName = document.querySelector('.player-name-screen form') ;
+const playerNameScreen = document.querySelector('.player-name-screen');
+const restartGameScreen = document.querySelector('.restart-screen');
+const restartGame = restartGameScreen.querySelector('button')
 let selectedShip = 'none';
 let rotation = 'x';
 let selectedShipsLeft = 5;
 let selectDoneBtn = document.querySelector('.select-done-button')
 const selectPlayer = Player('Select', 'd');
-//Start Button
-gameStartBtn.addEventListener('click', ()=> {
-    gameStartBtn.classList.add('hidden');
+let shotLength = 0;
+let result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] }
+let firstResult;
+let resultOutput = restartGameScreen.querySelector('.result');
+
+restartGame.addEventListener('click', ()=> {
+    restartGameScreen.classList.add('hidden');
+    gameEvent = 'start';
+    mainGameContainer.classList.add('hidden');
+    gameStartScrn.classList.remove('hidden');
+    selectPlayer.playerBoard.clearBoard();
+    selectBoard.innerHTML = '';
+    board1.innerHTML = '';
+    board2.innerHTML = '';
+    playerTurn = 0;
+    selectedShipsLeft = 5;
+    selectShipsLi.forEach((val) => {
+        val.classList.remove('hidden');
+    })
+    selectDoneBtn.classList.add('hidden')
+    shotLength = 0;
+    firstResult = null;
+    result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] };
+    
+})
+
+function enemyClick(e, elem) {
+    if (playerTurn != 0 ) {
+        return
+    }
+    let id = elem.getAttribute('id');
+    let row = id.charAt(3);
+    let column = id.charAt(5);
+    if (player1.playerTurn([+row, +column], player2.playerBoard)) {
+        playerTurn = 1;
+        drawBoard(player2, true);
+        if (player2.playerBoard.reportAllSunk()) {
+            resultOutput.textContent = 'You win!';
+            restartGameScreen.classList.remove('hidden')
+            playerTurn = 100;
+            return
+        }
+
+        if (MODE == 'BOT') {
+            player2.doRandomShot(player1.playerBoard);
+            playerTurn = 0;
+            drawBoard(player1);
+            if (player1.playerBoard.reportAllSunk()) {
+                resultOutput.textContent = 'You Lose.';
+                restartGameScreen.classList.remove('hidden')
+                //Remove enemy board
+                drawBoard(player2)
+                playerTurn = 100;
+                return
+            }
+        }
+
+        
+
+    }
+}
+
+function selectGameMode(e) {
+    const screen = document.querySelector('.mode-select-screen');
+    //Hide previous screen
+    gameStartScrn.classList.add('hidden');
+    createBoard(board1);
+    createBoard(board2);
+    
+    let enemyBoard = document.querySelectorAll(".board-2 .cell");
+    enemyBoard.forEach((elem) => {
+        elem.addEventListener('click', () => {enemyClick(e, elem)})
+    })
+
+    //Show Screen
+    screen.classList.remove('hidden');
+    //Button pressed is mode
+    const optionButtons = screen.querySelectorAll('.options .BOT');
+    optionButtons.forEach((val) => {
+        const modeSelectFunction = (e)=> {
+            MODE = e.currentTarget.classList[0];
+            console.log(MODE)
+            screen.classList.add('hidden');
+            optionButtons.forEach((val) => {
+                val.removeEventListener('click',modeSelectFunction);
+            })
+            //Show player name screen
+            switch (MODE) {
+                case 'PVP':
+                    return;
+                default:
+                    playerNameScreen.classList.remove('hidden');
+
+
+            }
+        }
+        val.addEventListener('click', modeSelectFunction);
+    })
+}
+
+function playerNameSelect(e) {
+    //Use switch or if statement for PVP
+    e.preventDefault();
+    if (e.target.checkValidity()) {
+        console.log(e.currentTarget.player1.value)
+        player1 = Player(e.currentTarget.player1.value, 1);
+        player2 = Player('BOT', 2)
+        playerNameScreen.classList.add('hidden');
+        selectMenu.classList.remove('hidden');
+        selectShipsFunct()
+    }
+    
+
+}
+
+formName.addEventListener('submit', playerNameSelect);
+
+const rotate = (e) => {
+    rotation = rotation == 'x' ? 'y' : 'x';
+    let selectBoardCells = selectBoard.querySelectorAll('.cell')
+    selectBoardCells.forEach((val) => {
+        val.classList.remove('valid')
+        val.classList.remove('invalid')
+    })
+}
+
+const selectShipsFunct = (e)=> {
     gameEvent = 'selectPos';
     //Show Select
     
@@ -95,7 +214,8 @@ gameStartBtn.addEventListener('click', ()=> {
     selectMenu.classList.remove('hidden');
 
      
-});
+}
+gameStartBtn.addEventListener('click', selectGameMode);
 //Select Position
 
 
@@ -134,10 +254,19 @@ selectBoard.addEventListener('click', (e) => {
 })
 
 
+document.addEventListener('keypress', (e)=> {
+    if (e.key === 'r') {
+        rotate();
+    }
+})
+rotateButton.addEventListener('click', rotate)
 
-
-rotateButton.addEventListener('click', ()=> {
-    rotation = rotation == 'x' ? 'y' : 'x';
+const rotateSvg = rotateButton.querySelector('svg');
+rotateButton.addEventListener('mouseover', ()=> {
+    rotateSvg.classList.add('hovered');
+})
+rotateButton.addEventListener('mouseleave', ()=> {
+    rotateSvg.classList.remove('hovered');
 })
 
 selectDoneBtn.addEventListener('click', ()=> {
@@ -145,83 +274,17 @@ selectDoneBtn.addEventListener('click', ()=> {
     selectMenu.classList.add('hidden');
     drawBoard(player1);
     player2.playerBoard.createRandomBoard();
-    mainGameContainer.classList.remove('hidden')
+    const board1Name =  document.querySelector('.board-1-wrap .name')
+    const board2Name =  document.querySelector('.board-2-wrap .name')
+    board1Name.textContent = player1.name.slice(-1).toLowerCase() == 's' ? player1.name + "' Board" : player1.name + "'s Board";
+    board2Name.textContent = player2.name.slice(-1).toLowerCase() == 's' ? player2.name + "' Board" : player2.name + "'s Board";
+    mainGameContainer.classList.remove('hidden');
 })
 
 
-let shotLength = 0;
-let result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] }
-let firstResult;
-let enemyBoard = document.querySelectorAll(".board-2 .cell");
-let playerCount = document.querySelector('.count-hit2');
-let enemyCount = document.querySelector('.count-hit');
-enemyBoard.forEach((elem) => {
-    elem.addEventListener('click', (e)=> {
-        if (playerTurn != 0 ) {
-            return
-        }
 
-        let id = elem.getAttribute('id');
-        let row = id.charAt(3);
-        let column = id.charAt(5);
-        if (player1.playerTurn([+row, +column], player2.playerBoard)) {
-            playerTurn = 1;
-            drawBoard(player2, true);
-            if (player2.playerBoard.reportAllSunk()) {
-                console.log("NICE YOU WIN!!")
-                playerTurn = 100;
-                return
-            }
 
-            if (MODE == 'BOT') {
-                
-                if (shotLength > 0 && shotLength < 5) {
-                    if (result == 'done') {
-                        shotLength = 0;
-                        result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] };
 
-                    } else {
-                        result = player2.doSmartShot(player1, result.hit, result.triedDirection, result.direction, shotLength, result.endsReached);
-                        if (result == 'redo') {
-                            shotLength = 0;
-                            result = {shotHit: false, triedDirection: [0,0,0,0], endsReached: 0, direction: [0,0] };
-                            // firstResult = player2.doRandomShot(player1);
-                        }
-                    }
-                    
-
-                    
-                } 
-
-                if (shotLength == 0 || shotLength >= 5 ) {
-                    shotLength = 0;
-                    firstResult = player2.doRandomShot(player1);
-                }
-                
-                if (result.shotHit || firstResult.shotHit) {
-                    shotLength += 1;
-                    if (firstResult.shotHit) {
-                        result.hit = [...firstResult.shot];
-                    }
-                    firstResult.shotHit = false;
-
-                }
-                playerTurn = 0;
-                drawBoard(player1);
-                if (player1.playerBoard.reportAllSunk()) {
-                    console.log("YOU LOSE!");
-                    drawBoard(player2)
-                    playerTurn = 100;
-                    return
-                }
-            }
-
-            
-
-        }
-    }
-    )
-})
 
 
 

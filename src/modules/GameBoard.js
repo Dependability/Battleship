@@ -17,6 +17,8 @@ const GameBoard = () => {
     }
     const ships = []
 
+    
+
     function validCoords(coords, length, rotation) {
         //check if not on top of a ship
         const row = +coords[0];
@@ -90,7 +92,6 @@ const GameBoard = () => {
     }
 
     function receiveAttack(coords) {
-
         if (inBoard(coords)) {
             const cell = this.board[coords[0]][coords[1]];
             if (cell['hit'] == false) {
@@ -118,9 +119,17 @@ const GameBoard = () => {
         })
     }
 
+    function clearBoard() {
+        board.forEach((val, row) => {
+            val.forEach((node, column) => {
+                board[row][column] = {hit: false, ship: null}
+            })
+        })
+    }
 
 
-    return {board, placeShip, receiveAttack, ships, reportAllSunk, validCoords, createRandomBoard}
+
+    return {board, placeShip, receiveAttack, ships, reportAllSunk, validCoords, createRandomBoard, clearBoard}
 }
 
 
