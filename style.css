@@ -41,20 +41,41 @@ h1 {
 }
 
 .options div {
-    background-color: #A3B18A;
+    background-color: #FFFFFF;
     padding: 15px;
     color: #1C3738;
     user-select: none;
-    opacity: .5;
     cursor: pointer;
 
+}
+
+.player-name-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+
+.player-name-screen .title{
+    font-size: 48px;
+    margin-bottom: 30px;
+}
+
+.player-name-screen form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+.player-name-screen input{
+    font-size: 36px;
 }
 
 .options div.BOT:hover{
     box-shadow: 0px 1px 10px white;
     
 }
-.game-start-button {
+.game-start-button,  .player-name-screen button, .restart-screen button {
     
     margin-top: 200px;
     font-size: 32px;
@@ -65,9 +86,15 @@ h1 {
     text-align: center;
     background-color: #069E2D;
     cursor: pointer;
+    border: none;
+
 
 }
 
+.player-name-screen button, .player-name-screen input, .restart-screen button {
+    display: block;
+    margin-top: 15px;
+}
 .select-done-button {
     border-radius: 9999px;
     padding: 10px;
@@ -183,6 +210,7 @@ h1 {
 .select-ships {
     display: flex;
     flex-direction: column;
+    width: calc(35vh);
     justify-content: center;
 }
 
@@ -204,7 +232,28 @@ h1 {
     background-color: green;
 }
 
+.restart-screen {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    top: 0; 
+    background-color: #00000099;
+}
 
+.restart-screen .inner {
+    width: 20vw;
+    height: 20vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    font-size: 48px;
+    background-color: #FFFFFF45;
+}
 /* Important */
 .hidden {
     display: none;
